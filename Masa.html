@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Masa və Qonaq İdarəetmə Paneli</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: #1e293b;
+            padding: 20px;
+        }
+
+        header {
+            background: #ffffff;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            max-width: 1600px;
+            margin: 0 auto 20px auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .header-title h1 {
+            font-size: 22px;
+            color: #0f172a;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        select, button, input {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            outline: none;
+            font-size: 14px;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-primary { background: #0284c7; color: #ffffff; border: none; }
+        .btn-primary:hover { background: #0369a1; }
+
+        .btn-table-add { background: #0d9488; color: #ffffff; border: none; }
+        .btn-table-add:hover { background: #0f766e; }
+
+        .btn-table-remove { background: #64748b; color: #ffffff; border: none; }
+        .btn-table-remove:hover { background: #475569; }
+
+        .btn-save { background: #16a34a; color: #ffffff; border: none; }
+        .btn-save:hover { background: #15803d; }
+
+        .btn-restore { background: #6366f1; color: #ffffff; border: none; }
+        .btn-restore:hover { background: #4f46e5; }
+
+        .btn-danger { background: #ef4444; color: #fff; border: none; }
+        .btn-danger:hover { background: #dc2626; }
+
+        .main-wrapper {
+            display: flex;
+            gap: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+            align-items: flex-start;
+        }
+
+        /* Sol Panel */
+        .sidebar {
+            width: 370px;
+            min-width: 370px;
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 120px);
+            position: sticky;
+            top: 20px;
+        }
+
+        .add-guest-box {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 12px;
+        }
+
+        .add-guest-box input { flex-grow: 1; }
+
+        .search-box {
+            width: 100%;
+            margin-bottom: 12px;
+        }
+
+        .guest-pool-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #475569;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .guest-list {
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 4px;
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .guest-list.drag-over {
+            background-color: #eff6ff;
+            border-color: #0284c7;
+        }
+
+        /* Qonaq Kartı */
+        .guest-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            padding: 8px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: grab;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px;
+        }
+
+        .guest-card.not-coming {
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+
+        .guest-card .name-text {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .card-actions {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+
+        .btn-card-action {
+            background: transparent;
+            border: none;
+            padding: 2px 4px;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .btn-card-action:hover { background: #e2e8f0; }
+        .btn-card-action.btn-del:hover { background: #fee2e2; }
+
+        /* Masalar */
+        .tables-grid {
+            flex-grow: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+        }
+
+        .table-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+            border: 2px solid transparent;
+            display: flex;
+            flex-direction: column;
+            min-height: 480px;
+        }
+
+        .table-card.drag-over {
+            border-color: #16a34a;
+            background-color: #f0fdf4;
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f1f5f9;
+            margin-bottom: 10px;
+            gap: 6px;
+        }
+
+        .table-name-group {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        .table-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .table-name:hover {
+            color: #0284c7;
+        }
+
+        .btn-edit-table-name {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-size: 11px;
+            padding: 2px;
+            border-radius: 4px;
+        }
+        .btn-edit-table-name:hover {
+            background: #e2e8f0;
+        }
+
+        .table-capacity-select {
+            padding: 3px 6px;
+            font-size: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            background: #f8fafc;
+            color: #334155;
+            cursor: pointer;
+        }
+
+        .capacity-badge {
+            font-size: 12px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 16px;
+            background: #f1f5f9;
+            color: #475569;
+            white-space: nowrap;
+        }
+
+        .capacity-badge.full {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .table-seats {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .table-seats .guest-card {
+            background: #f8fafc;
+            border-left: 3px solid #0284c7;
+        }
+
+        .table-seats .guest-card.not-coming {
+            border-left-color: #94a3b8;
+        }
+
+        .empty-placeholder {
+            text-align: center;
+            color: #94a3b8;
+            font-size: 12px;
+            margin-top: 60px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Masa Bölgüsü & Qonaq İdarəetməsi</h1>
+        </div>
+        <div class="header-controls">
+            <!-- Masa sayını idarə etmək -->
+            <button class="btn-table-add" onclick="addTable()">+ Masa Əlavə Et</button>
+            <button class="btn-table-remove" onclick="removeLastTable()">− Son Masanı Sil</button>
+
+            <!-- JSON və Şəkil -->
+            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDataFromFile(event)">
+            <button class="btn-restore" onclick="document.getElementById('importFileInput').click()">📂 Fayldan Bərpa Et</button>
+            <button class="btn-save" onclick="exportImageAndData()">📸 Saxla (Şəkil + Data)</button>
+            <button class="btn-danger" onclick="resetAllData()">↺ Sıfırla</button>
+        </div>
+    </header>
+
+    <div class="main-wrapper">
+        <div class="sidebar">
+            <div class="add-guest-box">
+                <input type="text" id="newGuestInput" placeholder="Yeni qonaq adı..." onkeydown="if(event.key==='Enter') addNewGuest()">
+                <button class="btn-primary" onclick="addNewGuest()">+</button>
+            </div>
+            <input type="text" id="searchInput" class="search-box" placeholder="Qonaq axtar...">
+            <div class="guest-pool-title">
+                <span>Yerləşdirilməmiş Qonaqlar</span>
+                <span id="unseatedCount">0</span>
+            </div>
+            <div class="guest-list" id="guestList" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropToGuestList(event)"></div>
+        </div>
+
+        <div class="tables-grid" id="tablesContainer"></div>
+    </div>
+
+    <script>
+        let state = {
+            tableCapacities: { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12, 6: 12 },
+            tableNames: { 1: "Masa 1", 2: "Masa 2", 3: "Masa 3", 4: "Masa 4", 5: "Masa 5", 6: "Masa 6" },
+            guests: []
+        };
+
+        const STORAGE_KEY = "MASALAR_DATA_V6";
+
+        function init() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    state = JSON.parse(saved);
+                    if (!state.tableCapacities || Object.keys(state.tableCapacities).length === 0) {
+                        state.tableCapacities = { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12, 6: 12 };
+                    }
+                    if (!state.tableNames) {
+                        state.tableNames = {};
+                        Object.keys(state.tableCapacities).forEach(k => {
+                            state.tableNames[k] = `Masa ${k}`;
+                        });
+                    }
+                    if (!Array.isArray(state.guests)) {
+                        state.guests = [];
+                    }
+                } catch(e) {
+                    initDefaultState();
+                }
+            } else {
+                initDefaultState();
+            }
+
+            renderTables();
+            renderAllGuests();
+            updateCounters();
+        }
+
+        function initDefaultState() {
+            state.tableCapacities = { 1: 12, 2: 12, 3: 12, 4: 12, 5: 12, 6: 12 };
+            state.tableNames = { 1: "Masa 1", 2: "Masa 2", 3: "Masa 3", 4: "Masa 4", 5: "Masa 5", 6: "Masa 6" };
+            state.guests = [];
+            saveState();
+        }
+
+        function saveState() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function getTableCount() {
+            return Object.keys(state.tableCapacities).length;
+        }
+
+        function renderTables() {
+            const container = document.getElementById("tablesContainer");
+            container.innerHTML = "";
+            const count = getTableCount();
+
+            for (let i = 1; i <= count; i++) {
+                const cap = state.tableCapacities[i] || 12;
+                const name = (state.tableNames && state.tableNames[i]) ? state.tableNames[i] : `Masa ${i}`;
+
+                const table = document.createElement("div");
+                table.className = "table-card";
+                table.id = `table-${i}`;
+                table.innerHTML = `
+                    <div class="table-header">
+                        <div class="table-name-group">
+                            <span class="table-name" id="tableNameSpan-${i}" title="Adı dəyişmək üçün iki dəfə klikləyin" ondblclick="editTableName(${i})">${name}</span>
+                            <button class="btn-edit-table-name" onclick="editTableName(${i})" title="Masanın adını dəyiş">✏️</button>
+                            <select class="table-capacity-select" onchange="changeSingleTableCapacity(${i}, this.value)">
+                                <option value="10" ${cap === 10 ? 'selected' : ''}>10 nəfərlik</option>
+                                <option value="12" ${cap === 12 ? 'selected' : ''}>12 nəfərlik</option>
+                                <option value="14" ${cap === 14 ? 'selected' : ''}>14 nəfərlik</option>
+                                <option value="16" ${cap === 16 ? 'selected' : ''}>16 nəfərlik</option>
+                            </select>
+                        </div>
+                        <span class="capacity-badge" id="badge-${i}">0 / ${cap}</span>
+                    </div>
+                    <div class="table-seats" id="seats-${i}" ondragover="allowDrop(event)" ondragleave="dragLeave(event)" ondrop="dropToTable(event, ${i})">
+                        <div class="empty-placeholder">Bura sürükləyin</div>
+                    </div>
+                `;
+                container.appendChild(table);
+            }
+        }
+
+        // MASANIN ADINI REDAKTƏ ETMƏK
+        function editTableName(index) {
+            const currentName = (state.tableNames && state.tableNames[index]) ? state.tableNames[index] : `Masa ${index}`;
+            const newName = prompt("Masanın adını daxil edin:", currentName);
+            if (newName !== null && newName.trim() !== "") {
+                if (!state.tableNames) state.tableNames = {};
+                state.tableNames[index] = newName.trim();
+                saveState();
+                const span = document.getElementById(`tableNameSpan-${index}`);
+                if (span) span.textContent = newName.trim();
+            }
+        }
+
+        // MASA ƏLAVƏ ET
+        function addTable() {
+            const count = getTableCount();
+            const newIndex = count + 1;
+            state.tableCapacities[newIndex] = 12;
+            if (!state.tableNames) state.tableNames = {};
+            state.tableNames[newIndex] = `Masa ${newIndex}`;
+            saveState();
+            renderTables();
+            renderAllGuests();
+            updateCounters();
+        }
+
+        // SON MASANI SİL
+        function removeLastTable() {
+            const count = getTableCount();
+            if (count <= 1) {
+                alert("Ən azı 1 masa qalmalıdır!");
+                return;
+            }
+
+            const targetTableKey = `table-${count}`;
+            const tableName = (state.tableNames && state.tableNames[count]) ? state.tableNames[count] : `Masa ${count}`;
+            const guestsAtTable = state.guests.filter(g => g.location === targetTableKey);
+
+            if (confirm(`"${tableName}" silinsin? ${guestsAtTable.length > 0 ? 'Oradakı qonaqlar sol siyahıya qaytarılacaq.' : ''}`)) {
+                state.guests.forEach(g => {
+                    if (g.location === targetTableKey) {
+                        g.location = 'pool';
+                    }
+                });
+
+                delete state.tableCapacities[count];
+                if (state.tableNames) delete state.tableNames[count];
+                saveState();
+                renderTables();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function changeSingleTableCapacity(tableIndex, value) {
+            state.tableCapacities[tableIndex] = parseInt(value, 10);
+            saveState();
+            updateCounters();
+        }
+
+        function createCardElement(item) {
+            const card = document.createElement("div");
+            card.className = `guest-card ${item.notComing ? 'not-coming' : ''}`;
+            card.id = item.id;
+            card.draggable = true;
+            card.ondragstart = dragStart;
+
+            const nameSpan = document.createElement("span");
+            nameSpan.className = "name-text";
+            nameSpan.textContent = item.name + (item.notComing ? " (Gəlməyəcək)" : "");
+            nameSpan.title = "Adı redaktə etmək üçün iki dəfə klikləyin";
+            nameSpan.ondblclick = (e) => {
+                e.stopPropagation();
+                editGuestName(item.id);
+            };
+
+            const actionsDiv = document.createElement("div");
+            actionsDiv.className = "card-actions";
+
+            // Redaktə
+            const editBtn = document.createElement("button");
+            editBtn.className = "btn-card-action";
+            editBtn.title = "Adı redaktə et";
+            editBtn.textContent = "✏️";
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                editGuestName(item.id);
+            };
+
+            // Status
+            const toggleBtn = document.createElement("button");
+            toggleBtn.className = "btn-card-action";
+            toggleBtn.title = item.notComing ? "Gələcək kimi işarələ" : "Gəlməyəcək kimi işarələ";
+            toggleBtn.textContent = item.notComing ? "✅" : "🚫";
+            toggleBtn.onclick = (e) => {
+                e.stopPropagation();
+                toggleGuestStatus(item.id);
+            };
+
+            // Tamamilə Sil
+            const delBtn = document.createElement("button");
+            delBtn.className = "btn-card-action btn-del";
+            delBtn.title = "Qonağı tamamilə sil";
+            delBtn.textContent = "🗑️";
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteGuestPermanently(item.id);
+            };
+
+            actionsDiv.appendChild(editBtn);
+            actionsDiv.appendChild(toggleBtn);
+            actionsDiv.appendChild(delBtn);
+
+            card.appendChild(nameSpan);
+            card.appendChild(actionsDiv);
+            return card;
+        }
+
+        function deleteGuestPermanently(id) {
+            const guest = state.guests.find(g => g.id === id);
+            if (!guest) return;
+
+            if (confirm(`"${guest.name}" adlı qonaq tamamilə silinsin?`)) {
+                state.guests = state.guests.filter(g => g.id !== id);
+                saveState();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function editGuestName(id) {
+            const guest = state.guests.find(g => g.id === id);
+            if (!guest) return;
+
+            const newName = prompt("Qonağın yeni adı:", guest.name);
+            if (newName !== null && newName.trim() !== "") {
+                guest.name = newName.trim();
+                saveState();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function renderAllGuests() {
+            const guestList = document.getElementById("guestList");
+            guestList.innerHTML = "";
+
+            const count = getTableCount();
+            for (let i = 1; i <= count; i++) {
+                const seats = document.getElementById(`seats-${i}`);
+                if (seats) {
+                    seats.innerHTML = `<div class="empty-placeholder">Bura sürükləyin</div>`;
+                }
+            }
+
+            state.guests.forEach(item => {
+                const card = createCardElement(item);
+                if (item.location === 'pool' || !item.location) {
+                    guestList.appendChild(card);
+                } else {
+                    const tableSeats = document.querySelector(`#${item.location} .table-seats`);
+                    if (tableSeats) {
+                        const ph = tableSeats.querySelector(".empty-placeholder");
+                        if (ph) ph.style.display = "none";
+                        tableSeats.appendChild(card);
+                    } else {
+                        item.location = 'pool';
+                        guestList.appendChild(card);
+                    }
+                }
+            });
+        }
+
+        function addNewGuest() {
+            const input = document.getElementById("newGuestInput");
+            const name = input.value.trim();
+            if (!name) return;
+
+            const newGuest = {
+                id: `guest_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+                name: name,
+                location: 'pool',
+                notComing: false
+            };
+
+            state.guests.unshift(newGuest);
+            saveState();
+
+            const card = createCardElement(newGuest);
+            document.getElementById("guestList").prepend(card);
+            input.value = "";
+            updateCounters();
+        }
+
+        function toggleGuestStatus(id) {
+            const guest = state.guests.find(g => g.id === id);
+            if (guest) {
+                guest.notComing = !guest.notComing;
+                saveState();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function dragStart(e) {
+            e.dataTransfer.setData("text/plain", e.target.id);
+        }
+
+        function allowDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add("drag-over");
+        }
+
+        function dragLeave(e) {
+            e.currentTarget.classList.remove("drag-over");
+        }
+
+        function dropToTable(e, tableIndex) {
+            e.preventDefault();
+            const dropArea = document.getElementById(`seats-${tableIndex}`);
+            dropArea.classList.remove("drag-over");
+
+            const maxCap = state.tableCapacities[tableIndex] || 12;
+            const currentCount = dropArea.querySelectorAll(".guest-card").length;
+
+            if (currentCount >= maxCap) {
+                alert(`Masa ${tableIndex} artıq doludur! (Maksimum ${maxCap} nəfər)`);
+                return;
+            }
+
+            const guestId = e.dataTransfer.getData("text/plain");
+            const guest = state.guests.find(g => g.id === guestId);
+            if (guest) {
+                guest.location = `table-${tableIndex}`;
+                saveState();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function dropToGuestList(e) {
+            e.preventDefault();
+            document.getElementById("guestList").classList.remove("drag-over");
+            const guestId = e.dataTransfer.getData("text/plain");
+            const guest = state.guests.find(g => g.id === guestId);
+            if (guest) {
+                guest.location = 'pool';
+                saveState();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        function updateCounters() {
+            const unseated = state.guests.filter(g => g.location === 'pool' || !g.location).length;
+            document.getElementById("unseatedCount").textContent = unseated;
+
+            const count = getTableCount();
+            for (let i = 1; i <= count; i++) {
+                const seatedCount = state.guests.filter(g => g.location === `table-${i}`).length;
+                const maxCap = state.tableCapacities[i] || 12;
+                const badge = document.getElementById(`badge-${i}`);
+                if (badge) {
+                    badge.textContent = `${seatedCount} / ${maxCap}`;
+                    if (seatedCount >= maxCap) {
+                        badge.classList.add("full");
+                    } else {
+                        badge.classList.remove("full");
+                    }
+                }
+            }
+        }
+
+        document.getElementById("searchInput").addEventListener("input", function (e) {
+            const val = e.target.value.toLowerCase();
+            document.querySelectorAll("#guestList .guest-card").forEach(card => {
+                const match = card.querySelector(".name-text").textContent.toLowerCase().includes(val);
+                card.style.display = match ? "flex" : "none";
+            });
+        });
+
+        // ŞƏKİL VƏ TAM DATANIN YÜKLƏNMƏSİ
+        function exportImageAndData() {
+            const tableCount = getTableCount();
+            const cols = 3;
+            const rows = Math.ceil(tableCount / cols);
+
+            const cardWidth = 470;
+            const cardHeight = 490;
+            const startX = 50;
+            const startY = 130;
+            const gapX = 40;
+            const gapY = 40;
+
+            const imgWidth = 1600;
+            const imgHeight = startY + rows * (cardHeight + gapY) + 40;
+
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            canvas.width = imgWidth;
+            canvas.height = imgHeight;
+
+            ctx.fillStyle = "#f8fafc";
+            ctx.fillRect(0, 0, imgWidth, imgHeight);
+
+            ctx.fillStyle = "#0f172a";
+            ctx.font = "bold 32px sans-serif";
+            ctx.fillText("Masa və Qonaq Bölgüsü Planı", 50, 60);
+
+            const totalSeated = state.guests.filter(g => g.location && g.location !== 'pool').length;
+            const notComingCount = state.guests.filter(g => g.notComing).length;
+            const poolCount = state.guests.filter(g => !g.location || g.location === 'pool').length;
+
+            ctx.fillStyle = "#64748b";
+            ctx.font = "16px sans-serif";
+            ctx.fillText(`Masalar: ${tableCount} ədəd  |  Yerləşdirilən: ${totalSeated}  |  Siyahıda gözləyən: ${poolCount}  |  Gəlməyəcək: ${notComingCount}`, 50, 95);
+
+            for (let i = 1; i <= tableCount; i++) {
+                const col = (i - 1) % cols;
+                const row = Math.floor((i - 1) / cols);
+                const x = startX + col * (cardWidth + gapX);
+                const y = startY + row * (cardHeight + gapY);
+
+                const maxCap = state.tableCapacities[i] || 12;
+                const tableName = (state.tableNames && state.tableNames[i]) ? state.tableNames[i] : `Masa ${i}`;
+                const tableGuests = state.guests.filter(g => g.location === `table-${i}`);
+
+                ctx.fillStyle = "#ffffff";
+                ctx.strokeStyle = "#e2e8f0";
+                ctx.lineWidth = 1;
+                roundRect(ctx, x, y, cardWidth, cardHeight, 12, true, true);
+
+                ctx.fillStyle = "#f1f5f9";
+                ctx.fillRect(x + 1, y + 1, cardWidth - 2, 50);
+
+                ctx.fillStyle = "#0f172a";
+                ctx.font = "bold 18px sans-serif";
+                ctx.fillText(tableName, x + 16, y + 32);
+
+                const badgeText = `${tableGuests.length} / ${maxCap}`;
+                ctx.fillStyle = tableGuests.length >= maxCap ? "#fee2e2" : "#e2e8f0";
+                roundRect(ctx, x + cardWidth - 95, y + 13, 80, 26, 13, true, false);
+
+                ctx.fillStyle = tableGuests.length >= maxCap ? "#dc2626" : "#475569";
+                ctx.font = "bold 13px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(badgeText, x + cardWidth - 55, y + 31);
+                ctx.textAlign = "left";
+
+                let itemY = y + 78;
+                if (tableGuests.length === 0) {
+                    ctx.fillStyle = "#94a3b8";
+                    ctx.font = "italic 14px sans-serif";
+                    ctx.fillText("(Masa boşdur)", x + 20, itemY);
+                } else {
+                    tableGuests.forEach((g, gIdx) => {
+                        ctx.fillStyle = g.notComing ? "#f8fafc" : "#ffffff";
+                        ctx.strokeStyle = g.notComing ? "#e2e8f0" : "#cbd5e1";
+                        roundRect(ctx, x + 14, itemY - 16, cardWidth - 28, 24, 4, true, true);
+
+                        ctx.fillStyle = g.notComing ? "#94a3b8" : "#0284c7";
+                        ctx.fillRect(x + 14, itemY - 16, 4, 24);
+
+                        ctx.fillStyle = g.notComing ? "#94a3b8" : "#1e293b";
+                        ctx.font = "13px sans-serif";
+                        const nameToPrint = `${gIdx + 1}. ${g.name} ${g.notComing ? ' (Gəlməyəcək)' : ''}`;
+                        ctx.fillText(nameToPrint, x + 26, itemY);
+
+                        if (g.notComing) {
+                            const textWidth = ctx.measureText(nameToPrint).width;
+                            ctx.strokeStyle = "#94a3b8";
+                            ctx.beginPath();
+                            ctx.moveTo(x + 26, itemY - 4);
+                            ctx.lineTo(x + 26 + textWidth, itemY - 4);
+                            ctx.stroke();
+                        }
+
+                        itemY += 28;
+                    });
+                }
+            }
+
+            const imgLink = document.createElement("a");
+            imgLink.download = "masalar_plani.png";
+            imgLink.href = canvas.toDataURL("image/png");
+            imgLink.click();
+
+            setTimeout(() => {
+                const dataBlob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+                const dataLink = document.createElement("a");
+                dataLink.download = "masalar_yedek_data.json";
+                dataLink.href = URL.createObjectURL(dataBlob);
+                dataLink.click();
+            }, 300);
+        }
+
+        // FAYLDAN BƏRPA ETMƏK
+        function importDataFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (parsed && Array.isArray(parsed.guests) && parsed.tableCapacities) {
+                        state = parsed;
+                        if (!state.tableNames) {
+                            state.tableNames = {};
+                            Object.keys(state.tableCapacities).forEach(k => {
+                                state.tableNames[k] = `Masa ${k}`;
+                            });
+                        }
+                        saveState();
+                        renderTables();
+                        renderAllGuests();
+                        updateCounters();
+                        alert(`Məlumatlar uğurla bərpa olundu! Masalar: ${getTableCount()} ədəd, Cəmi qonaq: ${state.guests.length}`);
+                    } else {
+                        alert("Fayl formatı düzgün deyil!");
+                    }
+                } catch (err) {
+                    alert("Faylı oxumaq mümkün olmadı!");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = "";
+        }
+
+        function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+            ctx.beginPath();
+            ctx.moveTo(x + radius, y);
+            ctx.lineTo(x + width - radius, y);
+            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+            ctx.lineTo(x + width, y + height - radius);
+            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+            ctx.lineTo(x + radius, y + height);
+            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+            ctx.lineTo(x, y + radius);
+            ctx.quadraticCurveTo(x, y, x + radius, y);
+            ctx.closePath();
+            if (fill) ctx.fill();
+            if (stroke) ctx.stroke();
+        }
+
+        function resetAllData() {
+            if (confirm("Bütün qonaqlar və masalar sıfırlanacaq. Əminsiniz?")) {
+                localStorage.removeItem(STORAGE_KEY);
+                initDefaultState();
+                renderTables();
+                renderAllGuests();
+                updateCounters();
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
