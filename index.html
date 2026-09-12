@@ -22,11 +22,17 @@
 
         header {
             background: #ffffff;
-            padding: 14px 16px;
+            padding: 14px 18px;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             max-width: 1600px;
             margin: 0 auto 14px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .header-top {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -45,6 +51,38 @@
             gap: 6px;
             flex-wrap: wrap;
         }
+
+        /* Yuxarı Statistika Kartları */
+        .stats-bar {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            border-top: 1px solid #f1f5f9;
+            padding-top: 10px;
+        }
+
+        .stat-chip {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: #475569;
+        }
+
+        .stat-chip strong {
+            font-size: 13px;
+        }
+
+        .stat-chip.stat-total { color: #0f172a; background: #e2e8f0; border-color: #cbd5e1; }
+        .stat-chip.stat-coming { color: #16a34a; background: #f0fdf4; border-color: #bbf7d0; }
+        .stat-chip.stat-not-coming { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+        .stat-chip.stat-seated { color: #0284c7; background: #f0f9ff; border-color: #bae6fd; }
+        .stat-chip.stat-unseated { color: #d97706; background: #fffbeb; border-color: #fde68a; }
 
         select, button, input {
             padding: 8px 10px;
@@ -97,7 +135,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 140px);
             position: sticky;
             top: 12px;
             z-index: 10;
@@ -321,9 +359,7 @@
             pointer-events: none;
         }
 
-        /* =========================================================
-           MOBİL CİHAZLAR ÜÇÜN XÜSUSİ DİZAYN (RESPONSIVE & TOUCH)
-           ========================================================= */
+        /* Mobil interfeys */
         .mobile-float-btn {
             display: none;
             position: fixed;
@@ -348,7 +384,6 @@
             z-index: 99;
         }
 
-        /* Tez Köçürmə Paneli (Bottom Sheet Picker) */
         .quick-move-sheet {
             display: none;
             position: fixed;
@@ -408,13 +443,16 @@
 
         @media (max-width: 768px) {
             body { padding: 8px; padding-bottom: 80px; }
-            header { flex-direction: column; align-items: stretch; gap: 8px; }
+            header { padding: 12px; }
+            .header-top { flex-direction: column; align-items: stretch; gap: 8px; }
             .header-controls { justify-content: space-between; }
             .header-controls button { flex-grow: 1; padding: 10px 6px; font-size: 12px; }
 
+            .stats-bar { justify-content: space-between; gap: 6px; }
+            .stat-chip { flex: 1 1 calc(50% - 6px); justify-content: center; font-size: 11px; padding: 6px 8px; }
+
             .main-wrapper { flex-direction: column; }
 
-            /* Mobildə sol paneli gizlədib bottom sheet edirik */
             .sidebar {
                 display: none;
                 position: fixed;
@@ -456,15 +494,26 @@
 <body>
 
     <header>
-        <div class="header-title">
-            <h1>Masa Bölgüsü</h1>
+        <div class="header-top">
+            <div class="header-title">
+                <h1>Masa və Qonaq İdarəetməsi</h1>
+            </div>
+            <div class="header-controls">
+                <button class="btn-table-add" onclick="addTable()">+ Masa</button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDataFromFile(event)">
+                <button class="btn-restore" onclick="document.getElementById('importFileInput').click()">📂 Yüklə</button>
+                <button class="btn-save" onclick="exportImageAndData()">📸 Saxla</button>
+                <button class="btn-danger" onclick="resetAllData()">↺ Sıfırla</button>
+            </div>
         </div>
-        <div class="header-controls">
-            <button class="btn-table-add" onclick="addTable()">+ Masa</button>
-            <input type="file" id="importFileInput" accept=".json" style="display:none;" onchange="importDataFromFile(event)">
-            <button class="btn-restore" onclick="document.getElementById('importFileInput').click()">📂 Yüklə</button>
-            <button class="btn-save" onclick="exportImageAndData()">📸 Saxla</button>
-            <button class="btn-danger" onclick="resetAllData()">↺ Sıfırla</button>
+
+        <!-- Ümumi Statistika Xülasəsi -->
+        <div class="stats-bar">
+            <div class="stat-chip stat-total">Toplam Qonaq: <strong id="statTotalCount">0</strong></div>
+            <div class="stat-chip stat-coming">Gələnlər: <strong id="statComingCount">0</strong></div>
+            <div class="stat-chip stat-not-coming">Gəlməyənlər: <strong id="statNotComingCount">0</strong></div>
+            <div class="stat-chip stat-seated">Masada: <strong id="statSeatedCount">0</strong></div>
+            <div class="stat-chip stat-unseated">Gözləyən: <strong id="statUnseatedCount">0</strong></div>
         </div>
     </header>
 
@@ -511,7 +560,7 @@
         };
 
         let selectedGuestForMove = null;
-        const STORAGE_KEY = "MASALAR_DATA_V9_MOBILE";
+        const STORAGE_KEY = "MASALAR_DATA_V10_STATS";
 
         function init() {
             const saved = localStorage.getItem(STORAGE_KEY);
@@ -617,7 +666,6 @@
             card.ondragleave = cardDragLeave;
             card.ondrop = cardDrop;
 
-            // Mobildə toxunanda köçürmə menyusu açılır
             card.onclick = (e) => {
                 if (e.target.closest("button")) return;
                 openQuickMoveSheet(item.id);
@@ -655,6 +703,40 @@
         }
 
         // ==========================================
+        // STATİSTİKA VƏ HESABLAYICI
+        // ==========================================
+        function updateCounters() {
+            const total = state.guests.length;
+            const notComing = state.guests.filter(g => g.notComing).length;
+            const coming = total - notComing;
+            const unseated = state.guests.filter(g => g.location === 'pool' || !g.location).length;
+            const seated = total - unseated;
+
+            // Yuxarı xülasə paneli
+            document.getElementById("statTotalCount").textContent = total;
+            document.getElementById("statComingCount").textContent = coming;
+            document.getElementById("statNotComingCount").textContent = notComing;
+            document.getElementById("statSeatedCount").textContent = seated;
+            document.getElementById("statUnseatedCount").textContent = unseated;
+
+            document.getElementById("unseatedCount").textContent = unseated;
+            document.getElementById("mobileUnseatedCount").textContent = unseated;
+
+            // Hər masanın indikatoru
+            const keys = getTableKeys();
+            keys.forEach(i => {
+                const seatedCount = state.guests.filter(g => g.location === `table-${i}`).length;
+                const maxCap = state.tableCapacities[i] || 12;
+                const badge = document.getElementById(`badge-${i}`);
+                if (badge) {
+                    badge.textContent = `${seatedCount} / ${maxCap}`;
+                    if (seatedCount >= maxCap) badge.classList.add("full");
+                    else badge.classList.remove("full");
+                }
+            });
+        }
+
+        // ==========================================
         // MOBİL ÜÇÜN TEZ KÖÇÜRMƏ (TAP-TO-MOVE)
         // ==========================================
         function openQuickMoveSheet(guestId) {
@@ -666,14 +748,12 @@
             const optionsContainer = document.getElementById("quickMoveOptions");
             optionsContainer.innerHTML = "";
 
-            // 1. Sol siyahı variantı
             const poolBtn = document.createElement("button");
             poolBtn.className = "quick-move-btn";
             poolBtn.textContent = "⬅️ Boş Siyahı";
             poolBtn.onclick = () => executeMove(guestId, 'pool');
             optionsContainer.appendChild(poolBtn);
 
-            // 2. Masalar variantı
             const keys = getTableKeys();
             keys.forEach(i => {
                 const tableName = (state.tableNames && state.tableNames[i]) ? state.tableNames[i] : `Masa ${i}`;
@@ -734,9 +814,6 @@
             renderAllGuests();
         }
 
-        // ==========================================
-        // DİGƏR ƏMƏLİYYATLAR (RENDER, DRAG-DROP, CRUD)
-        // ==========================================
         function renderAllGuests() {
             const guestList = document.getElementById("guestList");
             guestList.innerHTML = "";
@@ -923,24 +1000,6 @@
             }
         }
 
-        function updateCounters() {
-            const unseated = state.guests.filter(g => g.location === 'pool' || !g.location).length;
-            document.getElementById("unseatedCount").textContent = unseated;
-            document.getElementById("mobileUnseatedCount").textContent = unseated;
-
-            const keys = getTableKeys();
-            keys.forEach(i => {
-                const seatedCount = state.guests.filter(g => g.location === `table-${i}`).length;
-                const maxCap = state.tableCapacities[i] || 12;
-                const badge = document.getElementById(`badge-${i}`);
-                if (badge) {
-                    badge.textContent = `${seatedCount} / ${maxCap}`;
-                    if (seatedCount >= maxCap) badge.classList.add("full");
-                    else badge.classList.remove("full");
-                }
-            });
-        }
-
         document.getElementById("searchInput").addEventListener("input", function (e) {
             const val = e.target.value.toLowerCase();
             document.querySelectorAll("#guestList .guest-card").forEach(card => {
@@ -978,13 +1037,15 @@
             ctx.font = "bold 32px sans-serif";
             ctx.fillText("Masa və Qonaq Bölgüsü Planı", 50, 60);
 
-            const totalSeated = state.guests.filter(g => g.location && g.location !== 'pool').length;
-            const notComingCount = state.guests.filter(g => g.notComing).length;
-            const poolCount = state.guests.filter(g => !g.location || g.location === 'pool').length;
+            const total = state.guests.length;
+            const notComing = state.guests.filter(g => g.notComing).length;
+            const coming = total - notComing;
+            const seated = state.guests.filter(g => g.location && g.location !== 'pool').length;
+            const unseated = total - seated;
 
-            ctx.fillStyle = "#64748b";
-            ctx.font = "16px sans-serif";
-            ctx.fillText(`Masalar: ${tableCount} | Yerləşdirilən: ${totalSeated} | Gözləyən: ${poolCount} | Gəlməyəcək: ${notComingCount}`, 50, 95);
+            ctx.fillStyle = "#475569";
+            ctx.font = "bold 16px sans-serif";
+            ctx.fillText(`Toplam: ${total}  |  Gələnlər: ${coming}  |  Gəlməyənlər: ${notComing}  |  Masada: ${seated}  |  Gözləyən: ${unseated}`, 50, 95);
 
             keys.forEach((i, idx) => {
                 const col = idx % cols;
@@ -1085,7 +1146,7 @@
                         renderTables();
                         renderAllGuests();
                         updateCounters();
-                        alert("Məlumatlar uğurla bərpa olundu!");
+                        alert(`Məlumatlar uğurla bərpa olundu! Masalar: ${getTableKeys().length} ədəd, Cəmi qonaq: ${state.guests.length}`);
                     } else {
                         alert("Fayl formatı düzgün deyil!");
                     }
